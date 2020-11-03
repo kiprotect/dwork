@@ -1,0 +1,7 @@
+.mypy*
+dist
+venv
+*egg-info
+build
+*.pyc
+*~
