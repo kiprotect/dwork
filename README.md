@@ -5,7 +5,7 @@ Dwork can be freely used, it is released under the BSD-3 license.
 
 ## Installing
 
-You can install the latest Algoneer version using pip:
+You can install the latest Dwork version using pip:
 
     pip install dwork
 
@@ -27,12 +27,12 @@ environment:
 
     make setup
 
-The following sections are only relevant for developers of Algoneer, if you
+The following sections are only relevant for developers of Dwork, if you
 are a user you can disregard them.
 
 ## Running tests
 
-Algoneer comes with automated code formatting via black, static type analysis
+Dwork comes with automated code formatting via black, static type analysis
 via mypy and testing via py.test / unittest. You can run all of the above
 with a single make command:
 
@@ -65,7 +65,7 @@ generate these wheels simply use the following commands:
 
 ## Making a New Release
 
-To release a new version of Algonaut, follow these steps:
+To release a new version of Dwork, follow these steps:
 
 * Make sure all tests pass for the new release.
 * Update `setup.py` with the new version number. We follow the

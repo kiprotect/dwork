@@ -1,5 +1,4 @@
 TESTARGS := ${testargs}
-
 SHELL := /bin/bash
 
 .PHONY: docs
