@@ -1,0 +1,21 @@
+image: python:3.7.3
+
+stages:
+  - test
+  - deploy
+
+before_script:
+  - pip3 install virtualenv
+  - make setup
+
+test:
+  stage: test
+  script:
+    - make
+
+deploy:
+  stage: deploy
+  only:
+    - /^v\d+\.\d+\.\d+$/
+  script:
+    - make release
