@@ -1,7 +1,11 @@
 import pandas as pd
+import random
+import math
+from typing import Any
 from .dataset import Dataset
 from .attribute import Attribute
-from ..mechanisms.geometric import geometric_noise
+from ..dataschema import SchemaAttribute
+from ..mechanisms import geometric_noise, laplace_noise
 from .pandas_helpers import (
     epsilon,
     epsilon_flip,
@@ -10,7 +14,7 @@ from .pandas_helpers import (
     sample_p,
     sample_p_breadth_first,
 )
-from ..expressions import Function
+from ..ast import Function, Expression, Add
 import math
 
 
@@ -31,6 +35,10 @@ class PandasAttribute(Attribute):
         self.dataset = dataset
         self.column = column
 
+    @property
+    def type(self) -> SchemaAttribute:
+        return self.dataset.type(self.column)
+
     def len(self):
         """
         We use this unpythonic function to make all DP function calls look consistent.
@@ -40,13 +48,22 @@ class PandasAttribute(Attribute):
     def sum(self):
         pass
 
+    def dp(self, epsilon: float) -> Any:
+        raise NotImplementedError
+
+    def true(self) -> Any:
+        return self.dataset.df[self.column]
+
+    def sensitivity(self) -> Any:
+        return self.type.sensitivity
+
     def __len__(self):
         return self.len()
 
 
 class PandasDataset(Dataset):
-    def __init__(self, df, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, schema, df, *args, **kwargs):
+        super().__init__(schema, *args, **kwargs)
         self.df = df
 
     def len(self):
@@ -54,6 +71,9 @@ class PandasDataset(Dataset):
 
     def __len__(self):
         return self.len()
+
+    def __getitem__(self, item: str) -> PandasAttribute:
+        return PandasAttribute(self, item)
 
     def randomized_sample(
         self,

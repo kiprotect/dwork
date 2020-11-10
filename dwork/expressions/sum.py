@@ -1,2 +1,0 @@
-class Sum:
-    pass

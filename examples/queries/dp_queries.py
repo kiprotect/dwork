@@ -15,7 +15,7 @@ def main():
     # This is slightly "unpythonic"...
     l = ds.len()
 
-    #(ds['income'].sum()/ds.len()).get()
+    # (ds['income'].sum()/ds.len()).get()
 
     # This actually retrieves the length
     print(l.get())

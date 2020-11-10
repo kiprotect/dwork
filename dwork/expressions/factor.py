@@ -1,2 +1,0 @@
-class Factor:
-    pass
