@@ -1,6 +1,6 @@
 import abc
 from typing import Any
-from ..dataschema import SchemaAttribute
+from .types import Type
 
 
 class Expression(abc.ABC):
@@ -9,12 +9,18 @@ class Expression(abc.ABC):
 
         return Add(self, right)
 
-    @abc.abstractproperty
-    def type(self) -> SchemaAttribute:
-        raise NotImplementedError
+    def __truediv__(self, right: "Expression") -> "Expression":
+        from .operators import TrueDiv
 
-    @abc.abstractmethod
-    def sensitivity(self) -> Any:
+        return TrueDiv(self, right)
+
+    def __floordiv__(self, right: "Expression") -> "Expression":
+        from .operators import FloorDiv
+
+        return FloorDiv(self, right)
+
+    @abc.abstractproperty
+    def type(self) -> Type:
         raise NotImplementedError
 
     def is_dp(self) -> bool:
@@ -34,6 +40,10 @@ class Expression(abc.ABC):
 
     @abc.abstractmethod
     def true(self) -> Any:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def sensitivity(self) -> Any:
         raise NotImplementedError
 
     @abc.abstractmethod

@@ -4,7 +4,7 @@ import math
 from typing import Any
 from .dataset import Dataset
 from .attribute import Attribute
-from ..dataschema import SchemaAttribute
+from ..ast.types import Array, Type
 from ..mechanisms import geometric_noise, laplace_noise
 from .pandas_helpers import (
     epsilon,
@@ -14,20 +14,17 @@ from .pandas_helpers import (
     sample_p,
     sample_p_breadth_first,
 )
-from ..ast import Function, Expression, Add
+from ..ast.expression import Expression
+from ..ast.functions import Length, Sum
+
 import math
 
 
-class Length(Function):
-    def __init__(self, dataset):
-        self.dataset = dataset
-
-    def get(self):
-        return max(
-            0,
-            len(self.dataset.df)
-            + geometric_noise(self.dataset.epsilon, symmetric=True),
-        )
+class PandasLength(Length):
+    def true(self) -> Any:
+        if not isinstance(self.dataset, PandasDataset):
+            raise ValueError("expected a pandas dataset")
+        return len(self.dataset.df)
 
 
 class PandasAttribute(Attribute):
@@ -36,8 +33,8 @@ class PandasAttribute(Attribute):
         self.column = column
 
     @property
-    def type(self) -> SchemaAttribute:
-        return self.dataset.type(self.column)
+    def type(self) -> Type:
+        return Array(self.dataset.type(self.column))
 
     def len(self):
         """
@@ -46,7 +43,7 @@ class PandasAttribute(Attribute):
         return self.dataset.len()
 
     def sum(self):
-        pass
+        return Sum(self)
 
     def dp(self, epsilon: float) -> Any:
         raise NotImplementedError
@@ -55,7 +52,8 @@ class PandasAttribute(Attribute):
         return self.dataset.df[self.column]
 
     def sensitivity(self) -> Any:
-        return self.type.sensitivity
+        dt = self.dataset.type(self.column)
+        return dt.max - dt.min
 
     def __len__(self):
         return self.len()
@@ -67,7 +65,7 @@ class PandasDataset(Dataset):
         self.df = df
 
     def len(self):
-        return Length(self)
+        return PandasLength(self)
 
     def __len__(self):
         return self.len()

@@ -1,4 +1,4 @@
-from ..ast import Expression
+from ..ast.expression import Expression
 
 
 class Attribute(Expression):
