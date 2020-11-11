@@ -13,17 +13,39 @@ class Type:
         raise NotImplementedError
 
 
-class Addable:
+class Divisible(Type):
     @abc.abstractmethod
-    def __add__(self, other: Type) -> Type:
+    def __truediv__(self, other: "Divisible") -> "Divisible":
         raise NotImplementedError
 
     @abc.abstractmethod
-    def sum(self, n: int) -> Type:
+    def __floordiv__(self, other: "Divisible") -> "Divisible":
         raise NotImplementedError
 
 
-class Numeric(Addable):
+class Multipliable(Type):
+    @abc.abstractmethod
+    def __mul__(self, other: "Multipliable") -> "Multipliable":
+        raise NotImplementedError
+
+
+class Addable(Type):
+    @abc.abstractmethod
+    def __add__(self, other: "Addable") -> "Addable":
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def sum(self, n: int) -> "Addable":
+        raise NotImplementedError
+
+
+class Subtractable(Type):
+    @abc.abstractmethod
+    def __sub__(self, other: "Subtractable") -> "Subtractable":
+        raise NotImplementedError
+
+
+class Numeric(Addable, Divisible, Subtractable, Multipliable):
     @abc.abstractproperty
     def min(self) -> Any:
         raise NotImplementedError
@@ -33,7 +55,7 @@ class Numeric(Addable):
         raise NotImplementedError
 
 
-class Array(Type):
+class Array(Addable):
     def __init__(self, type: Type):
         self.type = type
 
@@ -41,7 +63,9 @@ class Array(Type):
     def itemtype(self) -> Type:
         return self.type
 
-    def __add__(self, other: "Array") -> "Array":
+    def __add__(self, other: Addable) -> Addable:
+        if not isinstance(other, Array):
+            raise ValueError("can only add arrays")
         if not isinstance(other.type, Addable) or not isinstance(self.type, Addable):
             raise ValueError("cannot add these types")
         return Array(self.type + other.type)
@@ -49,18 +73,36 @@ class Array(Type):
     def dp(self, value: Any, sensitivity: Any, epsilon: float) -> Any:
         raise NotImplementedError
 
-    def sum(self, n: int) -> Type:
+    def sum(self, n: int) -> Addable:
         if not isinstance(self.type, Addable):
             raise ValueError("underlying type is not addable")
         return self.type.sum(n)
 
 
-class Integer(Type, Numeric):
+class Integer(Numeric):
     """
     Represents integer data
     """
 
-    def __truediv__(self, other: Type) -> Type:
+    def __sub__(self, other: Subtractable) -> Subtractable:
+        """
+        Returns the type of a / b
+        """
+        return Integer()
+
+    def __mul__(self, other: Multipliable) -> Multipliable:
+        """
+        Returns the type of a / b
+        """
+        return Integer()
+
+    def __truediv__(self, other: Divisible) -> Divisible:
+        """
+        Returns the type of a / b
+        """
+        return Integer()
+
+    def __floordiv__(self, other: Divisible) -> Divisible:
         """
         Returns the type of a / b
         """
@@ -78,7 +120,7 @@ class Integer(Type, Numeric):
     def max(self) -> Any:
         return self._max
 
-    def __add__(self, other: Type) -> "Integer":
+    def __add__(self, other: Addable) -> Addable:
         if not isinstance(other, Numeric):
             raise ValueError("can only add numeric types")
         return Integer(
@@ -107,12 +149,30 @@ class Integer(Type, Numeric):
     type = int
 
 
-class Float(Type, Numeric):
+class Float(Numeric):
     """
     Represents floating point data
     """
 
-    def __truediv__(self, other: Type) -> Type:
+    def __mul__(self, other: Multipliable) -> Multipliable:
+        """
+        Returns the type of a / b
+        """
+        return Float()
+
+    def __sub__(self, other: Subtractable) -> Subtractable:
+        """
+        Returns the type of a / b
+        """
+        return Float()
+
+    def __truediv__(self, other: Divisible) -> Divisible:
+        """
+        Returns the type of a / b
+        """
+        return Float()
+
+    def __floordiv__(self, other: Divisible) -> Divisible:
         """
         Returns the type of a / b
         """
@@ -130,13 +190,13 @@ class Float(Type, Numeric):
     def max(self) -> Any:
         return self._max
 
-    def sum(self, n: int) -> "Float":
+    def sum(self, n: int) -> Numeric:
         return Float(
             self.min * n if self.min is not None else None,
             self.max * n if self.max is not None else None,
         )
 
-    def __add__(self, other: Type) -> "Float":
+    def __add__(self, other: Addable) -> Addable:
         if not isinstance(other, Numeric):
             raise ValueError("can only add numeric types")
         return Float(

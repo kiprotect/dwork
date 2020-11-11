@@ -3,21 +3,39 @@ from typing import Any
 from .types import Type
 
 
+def binary_op(op, left, right):
+    if not isinstance(left, Expression):
+        left = to_expression(left)
+    if not isinstance(right, Expression):
+        right = to_expression(right)
+    return op(left, right)
+
+
 class Expression(abc.ABC):
-    def __add__(self, right: "Expression") -> "Expression":
+    def __add__(self, right: Any) -> "Expression":
         from .operators import Add
 
-        return Add(self, right)
+        return binary_op(Add, self, right)
+
+    def __sub__(self, right: Any) -> "Expression":
+        from .operators import Sub
+
+        return binary_op(Sub, self, right)
+
+    def __mul__(self, right: Any) -> "Expression":
+        from .operators import Mul
+
+        return binary_op(Mul, self, right)
 
     def __truediv__(self, right: "Expression") -> "Expression":
         from .operators import TrueDiv
 
-        return TrueDiv(self, right)
+        return binary_op(TrueDiv, self, right)
 
     def __floordiv__(self, right: "Expression") -> "Expression":
         from .operators import FloorDiv
 
-        return FloorDiv(self, right)
+        return binary_op(FloorDiv, self, right)
 
     @abc.abstractproperty
     def type(self) -> Type:
