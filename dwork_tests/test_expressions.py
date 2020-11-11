@@ -4,7 +4,7 @@ import os
 
 from dwork.dataset.pandas import PandasDataset
 from dwork.dataschema import DataSchema
-from dwork.ast.types import Integer, Float
+from dwork.language.types import Integer, Float
 
 datasets_path = os.path.join(
     os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "examples/datasets"

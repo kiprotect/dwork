@@ -6,12 +6,6 @@ from .dataset import Dataset
 from .attribute import Attribute
 from ..language.types import Array, Type
 from ..mechanisms import geometric_noise, laplace_noise
-from .pandas_helpers import (
-    discretize,
-    randomize,
-    sample_p,
-    sample_p_breadth_first,
-)
 from ..language.expression import Expression
 from ..language.functions import Length, Sum
 
