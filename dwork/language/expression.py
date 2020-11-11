@@ -3,14 +3,6 @@ from typing import Any
 from .types import Type
 
 
-def binary_op(op, left, right):
-    if not isinstance(left, Expression):
-        left = to_expression(left)
-    if not isinstance(right, Expression):
-        right = to_expression(right)
-    return op(left, right)
-
-
 class Expression(abc.ABC):
     def __add__(self, right: Any) -> "Expression":
         from .operators import Add
@@ -67,3 +59,44 @@ class Expression(abc.ABC):
     @abc.abstractmethod
     def dp(self, epsilon: float) -> Any:
         raise NotImplementedError
+
+
+def to_expression(value: Any) -> Expression:
+    return Constant(value)
+
+
+def binary_op(op, left, right):
+    if not isinstance(left, Expression):
+        left = to_expression(left)
+    if not isinstance(right, Expression):
+        right = to_expression(right)
+    return op(left, right)
+
+
+class Constant(Expression):
+    def __init__(self, value):
+        self.value = value
+        # we call this to check whether we have a type for this constant
+        self.type
+
+    @property
+    def type(self) -> Type:
+        if isinstance(self.value, int):
+            from .types import Integer
+
+            return Integer()
+        elif isinstance(self.value, float):
+            from .types import Float
+
+            return Float()
+        else:
+            raise ValueError("unsupported constant type")
+
+    def sensitivity(self) -> Any:
+        return 0
+
+    def true(self) -> Any:
+        return self.value
+
+    def dp(self, epsilon: float) -> Any:
+        return self.true()

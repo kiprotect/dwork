@@ -55,20 +55,68 @@ class Numeric(Addable, Divisible, Subtractable, Multipliable):
         raise NotImplementedError
 
 
-class Array(Addable):
+class Array(Numeric):
     def __init__(self, type: Type):
+        if not isinstance(type, Numeric):
+            raise ValueError("array requires a numeric type")
         self.type = type
 
     @property
     def itemtype(self) -> Type:
         return self.type
 
+    @property
+    def min(self):
+        return self.type.min
+
+    @property
+    def max(self):
+        return self.type.max
+
     def __add__(self, other: Addable) -> Addable:
-        if not isinstance(other, Array):
-            raise ValueError("can only add arrays")
-        if not isinstance(other.type, Addable) or not isinstance(self.type, Addable):
+        if isinstance(other, Array):
+            other_type: Union[Numeric, Addable] = other.type
+        else:
+            other_type = other
+        if not isinstance(other_type, Addable):
             raise ValueError("cannot add these types")
-        return Array(self.type + other.type)
+        return Array(self.type + other_type)
+
+    def __sub__(self, other: Subtractable) -> Subtractable:
+        if isinstance(other, Array):
+            other_type: Union[Numeric, Subtractable] = other.type
+        else:
+            other_type = other
+        if not isinstance(other_type, Subtractable):
+            raise ValueError("cannot add these types")
+        return Array(self.type - other_type)
+
+    def __truediv__(self, other: Divisible) -> Divisible:
+        if isinstance(other, Array):
+            other_type: Union[Numeric, Divisible] = other.type
+        else:
+            other_type = other
+        if not isinstance(other_type, Divisible):
+            raise ValueError("cannot divide these types")
+        return Array(self.type / other_type)
+
+    def __floordiv__(self, other: Divisible) -> Divisible:
+        if isinstance(other, Array):
+            other_type: Union[Numeric, Divisible] = other.type
+        else:
+            other_type = other
+        if not isinstance(other_type, Divisible):
+            raise ValueError("cannot divide these types")
+        return Array(self.type // other_type)
+
+    def __mul__(self, other: Multipliable) -> Multipliable:
+        if isinstance(other, Array):
+            other_type: Union[Numeric, Multipliable] = other.type
+        else:
+            other_type = other
+        if not isinstance(other_type, Multipliable):
+            raise ValueError("cannot multiply these types")
+        return Array(self.type * other_type)
 
     def dp(self, value: Any, sensitivity: Any, epsilon: float) -> Any:
         raise NotImplementedError

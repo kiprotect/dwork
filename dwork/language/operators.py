@@ -111,6 +111,7 @@ class Mul(BinaryExpression):
         if not isinstance(self.left.type, Multipliable) or not isinstance(
             self.right.type, Multipliable
         ):
+            print(self.left.type, self.right.type)
             raise ValueError("expected multipliable arguments")
         return self.left.type * self.right.type
 
@@ -121,9 +122,7 @@ class Mul(BinaryExpression):
         """
         ls = self.left.sensitivity()
         rs = self.right.sensitivity()
-        rv = self.right.true()
-        lv = self.left.true()
-        return max(abs(lv) * (abs(rv) + rs), abs(rv) * (abs(lv) + ls))
+        return ls * rs
 
     def is_dp(self) -> bool:
         return self.left.is_dp() and self.right.is_dp()
@@ -147,6 +146,7 @@ class Sub(BinaryExpression):
         if not isinstance(self.left.type, Subtractable) or not isinstance(
             self.right.type, Subtractable
         ):
+            print(self.left, self.right.type)
             raise ValueError("expected subtractable arguments")
         return self.left.type - self.right.type
 

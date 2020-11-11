@@ -22,6 +22,32 @@ def load_ds():
 
 class ExpressionsTest(unittest.TestCase):
 
+    def test_complex_expression(self):
+        ds = load_ds()
+        # we add two values together (which is nonsensical in this case)
+        x = (ds["Weight"]-ds["Height"]*2.0).sum()
+        assert not x.is_dp()
+
+        tx = (ds.df["Weight"]-ds.df["Height"]*2.0).sum()
+        # we make sure the exact value is what we expect
+        assert tx == -196244.0
+
+        # we make sure the exact value is identical to the expression value
+        assert tx == x.true()
+
+        # we make sure the 
+        assert -200000.0 <= x.dp(0.5) <= -150000
+
+        uniques = set()
+        for i in range(10):
+            xdp = x.dp(0.5)
+            uniques.add(xdp)
+            assert -200000.0 <= x.dp(0.5) <= -150000
+    
+        # we check that the DP mechanism does not always produce the same value
+        # (this is not a proper DP test)
+        assert len(uniques) >= 4
+
     def test_simple_sum(self):
         ds = load_ds()
         # we add two values together (which is nonsensical in this case)
