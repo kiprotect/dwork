@@ -5,7 +5,7 @@ from req import reqs
 setup(
     name="dwork",
     python_requires=">=3.6",
-    version="0.0.3",
+    version="0.0.4",
     author="KIProtect GmbH",
     author_email="dwork@kiprotect.com",
     license="BSD-3",
