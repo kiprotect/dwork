@@ -4,18 +4,16 @@ import math
 from typing import Any
 from .dataset import Dataset
 from .attribute import Attribute
-from ..ast.types import Array, Type
+from ..language.types import Array, Type
 from ..mechanisms import geometric_noise, laplace_noise
 from .pandas_helpers import (
-    epsilon,
-    epsilon_flip,
     discretize,
     randomize,
     sample_p,
     sample_p_breadth_first,
 )
-from ..ast.expression import Expression
-from ..ast.functions import Length, Sum
+from ..language.expression import Expression
+from ..language.functions import Length, Sum
 
 import math
 
@@ -72,36 +70,3 @@ class PandasDataset(Dataset):
 
     def __getitem__(self, item: str) -> PandasAttribute:
         return PandasAttribute(self, item)
-
-    def randomized_sample(
-        self,
-        breadth_first=True,
-        interleave=0.0,
-        max_depth=3,
-        min_depth=1,
-        limit=None,
-        method="flip",
-        exclude=None,
-        target=None,
-    ):
-        fds, mapping, reverse_mapping = discretize(self.df, exclude=exclude)
-        pr = 0.5
-        pf = 0.5
-        flip = method == "flip"
-        fdsr = randomize(fds, 0, pf, flip=flip)
-        if breadth_first:
-            return sample_p_breadth_first(
-                mapping,
-                reverse_mapping,
-                fdsr,
-                fds,
-                pr,
-                pf,
-                flip=flip,
-                forced_attributes=target,
-                min_depth=min_depth,
-                max_depth=max_depth,
-                limit=limit,
-                verbose=False,
-                interleave=interleave,
-            )

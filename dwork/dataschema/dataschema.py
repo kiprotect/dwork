@@ -1,4 +1,4 @@
-from ..ast.types import Type
+from ..language.types import Type
 
 
 class DataSchemaMeta(type):

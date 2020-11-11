@@ -1,16 +1,15 @@
 import abc
 from typing import Type, TypeVar
 from .attribute import Attribute
-from ..ast.types import Type as DworkType
+from ..language.types import Type as DworkType
 from ..dataschema import DataSchema
 
 DataSchemaType = TypeVar("DataSchemaType", bound=DataSchema)
 
 
 class Dataset:
-    def __init__(self, schema: Type[DataSchemaType], epsilon: float = 0.5):
+    def __init__(self, schema: Type[DataSchemaType]):
         self.schema = schema(self)
-        self.epsilon = epsilon
 
     @abc.abstractmethod
     def len(self) -> int:

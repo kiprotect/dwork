@@ -17,7 +17,7 @@ class AbsenteeismSchema(DataSchema):
 def load_ds():
     filename = f"{datasets_path}/absenteeism_at_work.csv"
     df = pd.read_csv(filename, sep=";")
-    ds = PandasDataset(AbsenteeismSchema, df, epsilon=0.5)
+    ds = PandasDataset(AbsenteeismSchema, df)
     return ds
 
 class ExpressionsTest(unittest.TestCase):

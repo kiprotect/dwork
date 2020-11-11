@@ -31,7 +31,7 @@ class AbsenteeismSchema(DataSchema):
 
 filename = f"absenteeism_at_work.csv"
 df = pd.read_csv(filename, sep=";")
-ds = PandasDataset(AbsenteeismSchema, df, epsilon=0.5)
+ds = PandasDataset(AbsenteeismSchema, df)
 ```
 
 Here we have also defined a schema for the dataset, which is necessary to tell Dwork about the data types and their ranges. Dwork uses that information to e.g. calculate sensitivities and apply proper random noise to the results of our analyses.
@@ -44,7 +44,7 @@ The loaded dataset can then be used almost like a normal dataframe. For example,
 
 returns the mean weight of our dataset using a differentially private (DP) mechanism with a privacy factor `epsilon=0.5`. Here, Dwork automatically calculates the sensitivity and the required amount of noise that needs to be added to the result of the calculation in order to achieve 0.5-DP. Neat, isn't it?
 
-Right now Dwork already supports basic operations like addition, multiplication and division on basic types like integers or floats. It can also perform basic aggregation operations on arrays of these values, like calculating sums or lengths. In addition, Dworks' internal semantics and type system makes it easy to add new data types and expressions.
+Right now Dwork already supports basic operations like addition, multiplication and division on types like integers and floats. It can also perform basic aggregation operations on arrays of these values, like calculating sums or lengths. In addition, Dworks' internal semantics and type system make it easy to add new data types and expressions.
 
 # Information For Developers
 
