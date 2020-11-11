@@ -2,8 +2,7 @@
 
 # Dwork
 
-Dwork is a Python toolkit for differentially private (DP) data science & analytics.
-Dwork can be freely used, it is released under the BSD-3 license.
+Dwork is a Python toolkit for anonymous data science & analytics. It leverages modern privacy concepts like differential privacy (DP) to anonymize sensitive and personal data on the fly while making it (hopefully) easy to work with this data. Dwork can be freely used, it is released under the BSD-3 license.
 
 ## Installing
 
@@ -11,32 +10,29 @@ You can install the latest Dwork version using pip:
 
     pip install dwork
 
-Alternatively, you can download this repository and install Dwork directly
-from the main directory of the repository:
+Alternatively, you can download this repository and install Dwork directly from the main directory of the repository:
 
     pip install .
 
+## Examples
+
+To learn more about how to use Dwork for anonymous data science, please have a look at the `examples` directory.
+
 # Information For Developers
 
-If you want to work on Dwork itself, you can install the package in development mode,
-which will not copy files but instead link them to your virtual environment
-so that you can edit them and see changes immediately:
+If you want to work on Dwork itself, you can install the package in development mode, which will not copy files but instead link them to your virtual environment so that you can edit them and see changes immediately:
 
     pip install -e .
 
-If you want to run tests, please also install test dependencies and a virtual
-environment:
+If you want to run tests, please also install test dependencies and a virtual environment:
 
     make setup
 
-The following sections are only relevant for developers of Dwork, if you
-are a user you can disregard them.
+The following sections are only relevant for developers of Dwork, if you are a user you can disregard them.
 
 ## Running tests
 
-Dwork comes with automated code formatting via black, static type analysis
-via mypy and testing via py.test / unittest. You can run all of the above
-with a single make command:
+Dwork comes with automated code formatting via black, static type analysis via mypy and testing via py.test / unittest. You can run all of the above with a single make command:
 
     make
 
@@ -59,8 +55,7 @@ You can use the fabulous `pur` tool to upgrade packages in the requirements file
 
 ## Building Wheels
 
-We install all packages from local wheels if possible (for security reasons), to
-generate these wheels simply use the following commands:
+We install all packages from local wheels if possible (for security reasons), to generate these wheels simply use the following commands:
 
     pip wheel --wheel-dir wheels -r requirements.txt
     pip wheel --wheel-dir wheels -r requirements-test.txt
@@ -85,7 +80,6 @@ To release a new version of Dwork, follow these steps:
 * Alternatively, you can create the distribution packages using `setup.py`:
 
       python setup.py sdist bdist_wheel
-* You can also manually publish the packages to PyPi via Twine
-  (not recommended):
+* You can also manually publish the packages to PyPi via Twine (not recommended):
   
       twine upload dist/*
