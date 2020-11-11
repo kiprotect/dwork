@@ -3,10 +3,6 @@ from .expression import Expression
 from .types import Type, Addable, Subtractable, Multipliable, Divisible
 
 
-class Mod(Expression):
-    pass
-
-
 class BinaryExpression(Expression):
     left: Expression
     right: Expression
@@ -56,8 +52,17 @@ class FloorDiv(BinaryExpression):
         return self.left.type // self.right.type
 
     def sensitivity(self) -> Any:
+        """
+        The sensitivity of a floor division operation is given as for the
+        normal division, except that we take the floor value
+        """
+        ls = self.left.sensitivity()
+        rs = self.right.sensitivity()
         rv = self.right.true()
-        return max(self.left.sensitivity(), self.right.sensitivity())
+        rm = abs(rv) - rs
+        if rm <= 0:
+            raise ValueError("infinite sensitivity")
+        return ls // rm
 
     def dp(self, epsilon: float) -> Any:
         return self.type.dp(self.true(), self.sensitivity(), epsilon)
