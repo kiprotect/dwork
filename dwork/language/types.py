@@ -3,6 +3,8 @@ from typing import Optional, Union, Any
 import math
 import abc
 
+maxint = int(2e31 - 1)
+
 
 class Type:
     def __init__(self):
@@ -13,39 +15,43 @@ class Type:
         raise NotImplementedError
 
 
-class Divisible(Type):
+class Numeric(Type):
     @abc.abstractmethod
-    def __truediv__(self, other: "Divisible") -> "Divisible":
+    def __add__(self, other: "Numeric") -> "Numeric":
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __floordiv__(self, other: "Divisible") -> "Divisible":
-        raise NotImplementedError
-
-
-class Multipliable(Type):
-    @abc.abstractmethod
-    def __mul__(self, other: "Multipliable") -> "Multipliable":
-        raise NotImplementedError
-
-
-class Addable(Type):
-    @abc.abstractmethod
-    def __add__(self, other: "Addable") -> "Addable":
+    def __mul__(self, other: "Numeric") -> "Numeric":
         raise NotImplementedError
 
     @abc.abstractmethod
-    def sum(self, n: int) -> "Addable":
+    def __sub__(self, other: "Numeric") -> "Numeric":
         raise NotImplementedError
 
-
-class Subtractable(Type):
     @abc.abstractmethod
-    def __sub__(self, other: "Subtractable") -> "Subtractable":
+    def __truediv__(self, other: "Numeric") -> "Numeric":
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def __floordiv__(self, other: "Numeric") -> "Numeric":
+        raise NotImplementedError
 
-class Numeric(Addable, Divisible, Subtractable, Multipliable):
+    @abc.abstractmethod
+    def sum(self) -> "Numeric":
+        raise NotImplementedError
+
+    @property
+    def range(self) -> Any:
+        return self.max - self.min
+
+    @property
+    def absmin(self) -> Any:
+        return min(abs(self.min), abs(self.max))
+
+    @property
+    def absmax(self) -> Any:
+        return max(abs(self.min), abs(self.max))
+
     @abc.abstractproperty
     def min(self) -> Any:
         raise NotImplementedError
@@ -73,58 +79,58 @@ class Array(Numeric):
     def max(self):
         return self.type.max
 
-    def __add__(self, other: Addable) -> Addable:
+    def __add__(self, other: Numeric) -> Numeric:
         if isinstance(other, Array):
-            other_type: Union[Numeric, Addable] = other.type
+            other_type: Union[Numeric, Numeric] = other.type
         else:
             other_type = other
-        if not isinstance(other_type, Addable):
+        if not isinstance(other_type, Numeric):
             raise ValueError("cannot add these types")
         return Array(self.type + other_type)
 
-    def __sub__(self, other: Subtractable) -> Subtractable:
+    def __sub__(self, other: Numeric) -> Numeric:
         if isinstance(other, Array):
-            other_type: Union[Numeric, Subtractable] = other.type
+            other_type: Union[Numeric, Numeric] = other.type
         else:
             other_type = other
-        if not isinstance(other_type, Subtractable):
+        if not isinstance(other_type, Numeric):
             raise ValueError("cannot add these types")
         return Array(self.type - other_type)
 
-    def __truediv__(self, other: Divisible) -> Divisible:
+    def __truediv__(self, other: Numeric) -> Numeric:
         if isinstance(other, Array):
-            other_type: Union[Numeric, Divisible] = other.type
+            other_type: Union[Numeric, Numeric] = other.type
         else:
             other_type = other
-        if not isinstance(other_type, Divisible):
+        if not isinstance(other_type, Numeric):
             raise ValueError("cannot divide these types")
         return Array(self.type / other_type)
 
-    def __floordiv__(self, other: Divisible) -> Divisible:
+    def __floordiv__(self, other: Numeric) -> Numeric:
         if isinstance(other, Array):
-            other_type: Union[Numeric, Divisible] = other.type
+            other_type: Union[Numeric, Numeric] = other.type
         else:
             other_type = other
-        if not isinstance(other_type, Divisible):
+        if not isinstance(other_type, Numeric):
             raise ValueError("cannot divide these types")
         return Array(self.type // other_type)
 
-    def __mul__(self, other: Multipliable) -> Multipliable:
+    def __mul__(self, other: Numeric) -> Numeric:
         if isinstance(other, Array):
-            other_type: Union[Numeric, Multipliable] = other.type
+            other_type: Union[Numeric, Numeric] = other.type
         else:
             other_type = other
-        if not isinstance(other_type, Multipliable):
+        if not isinstance(other_type, Numeric):
             raise ValueError("cannot multiply these types")
         return Array(self.type * other_type)
 
     def dp(self, value: Any, sensitivity: Any, epsilon: float) -> Any:
         raise NotImplementedError
 
-    def sum(self, n: int) -> Addable:
-        if not isinstance(self.type, Addable):
-            raise ValueError("underlying type is not addable")
-        return self.type.sum(n)
+    def sum(self) -> Numeric:
+        if not isinstance(self.type, Numeric):
+            raise ValueError("underlying type is not Numeric")
+        return self.type.sum()
 
 
 class Integer(Numeric):
@@ -132,31 +138,39 @@ class Integer(Numeric):
     Represents integer data
     """
 
-    def __sub__(self, other: Subtractable) -> Subtractable:
+    def __sub__(self, other: Numeric) -> Numeric:
+        """
+        Returns the type of a - b
+        """
+        if isinstance(other, Array):
+            return Array(self - other.type)
+        return Integer()
+
+    def __mul__(self, other: Numeric) -> Numeric:
+        """
+        Returns the type of a * b
+        """
+        if isinstance(other, Array):
+            return Array(self * other.type)
+        return Integer()
+
+    def __truediv__(self, other: Numeric) -> Numeric:
         """
         Returns the type of a / b
         """
+        if isinstance(other, Array):
+            return Array(self / other.type)
         return Integer()
 
-    def __mul__(self, other: Multipliable) -> Multipliable:
+    def __floordiv__(self, other: Numeric) -> Numeric:
         """
-        Returns the type of a / b
+        Returns the type of a // b
         """
+        if isinstance(other, Array):
+            return Array(self // other.type)
         return Integer()
 
-    def __truediv__(self, other: Divisible) -> Divisible:
-        """
-        Returns the type of a / b
-        """
-        return Integer()
-
-    def __floordiv__(self, other: Divisible) -> Divisible:
-        """
-        Returns the type of a / b
-        """
-        return Integer()
-
-    def __init__(self, min: Optional[int] = None, max: Optional[int] = None):
+    def __init__(self, min: Optional[int] = -maxint, max: Optional[int] = maxint):
         self._min = min
         self._max = max
 
@@ -168,31 +182,25 @@ class Integer(Numeric):
     def max(self) -> Any:
         return self._max
 
-    def __add__(self, other: Addable) -> Addable:
+    def __add__(self, other: Numeric) -> Numeric:
         if not isinstance(other, Numeric):
             raise ValueError("can only add numeric types")
+        if isinstance(other, Array):
+            return Array(other.type + self)
         return Integer(
-            int(math.floor(self.min + other.min))
-            if self.min is not None and other.min is not None
-            else None,
-            int(math.ceil(self.max + other.max))
-            if self.max is not None and other.max is not None
-            else None,
+            int(math.floor(self.min + other.min)), int(math.ceil(self.max + other.max))
         )
 
-    def sum(self, n: int) -> "Integer":
-        return Integer(
-            self.min * n if self.min is not None else None,
-            self.max * n if self.max is not None else None,
-        )
+    def sum(self) -> "Integer":
+        return Integer()
 
     def dp(self, value: Any, sensitivity: Any, epsilon: float) -> Any:
-        v = value + geometric_noise(epsilon, symmetric=True) * sensitivity
-        if self.min is not None:
-            v = max(v, self.min)
-        if self.max is not None:
-            v = min(v, self.max)
-        return v
+        return min(
+            max(
+                value + geometric_noise(epsilon, symmetric=True) * sensitivity, self.min
+            ),
+            self.max,
+        )
 
     type = int
 
@@ -202,31 +210,41 @@ class Float(Numeric):
     Represents floating point data
     """
 
-    def __mul__(self, other: Multipliable) -> Multipliable:
+    def __mul__(self, other: Numeric) -> Numeric:
         """
         Returns the type of a / b
         """
+        if isinstance(other, Array):
+            return Array(self * other.type)
         return Float()
 
-    def __sub__(self, other: Subtractable) -> Subtractable:
+    def __sub__(self, other: Numeric) -> Numeric:
         """
         Returns the type of a / b
         """
-        return Float()
+        if isinstance(other, Array):
+            return Array(other.type - self)
+        return Float(self.min - other.max, self.max - other.min)
 
-    def __truediv__(self, other: Divisible) -> Divisible:
+    def __truediv__(self, other: Numeric) -> Numeric:
         """
         Returns the type of a / b
         """
+        if isinstance(other, Array):
+            return Array(self / other.type)
         return Float()
 
-    def __floordiv__(self, other: Divisible) -> Divisible:
+    def __floordiv__(self, other: Numeric) -> Numeric:
         """
         Returns the type of a / b
         """
+        if isinstance(other, Array):
+            return Array(self // other.type)
         return Float()
 
-    def __init__(self, min: Optional[float] = None, max: Optional[float] = None):
+    def __init__(
+        self, min: Optional[float] = float("-inf"), max: Optional[float] = float("inf")
+    ):
         self._min = min
         self._max = max
 
@@ -238,31 +256,20 @@ class Float(Numeric):
     def max(self) -> Any:
         return self._max
 
-    def sum(self, n: int) -> Numeric:
-        return Float(
-            self.min * n if self.min is not None else None,
-            self.max * n if self.max is not None else None,
-        )
+    def sum(self) -> Numeric:
+        return Float()
 
-    def __add__(self, other: Addable) -> Addable:
+    def __add__(self, other: Numeric) -> Numeric:
         if not isinstance(other, Numeric):
             raise ValueError("can only add numeric types")
-        return Float(
-            self.min + other.min
-            if self.min is not None and other.min is not None
-            else None,
-            self.max + other.max
-            if self.max is not None and other.max is not None
-            else None,
-        )
+        if isinstance(other, Array):
+            return Array(self + other.type)
+        return Float(self.min + other.min, self.max + other.max)
 
     def dp(self, value: Any, sensitivity: Any, epsilon: float) -> Any:
-        v = value + laplace_noise(epsilon) * sensitivity
-        if self.min is not None:
-            v = max(v, self.min)
-        if self.max is not None:
-            v = min(v, self.max)
-        return v
+        return min(
+            max(value + laplace_noise(epsilon) * sensitivity, self.min), self.max
+        )
 
     type = float
 

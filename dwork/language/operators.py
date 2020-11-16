@@ -1,6 +1,13 @@
 from typing import Any
 from .expression import Expression
-from .types import Type, Addable, Subtractable, Multipliable, Divisible
+from ..dataset.attribute import Attribute
+from .types import Type, Numeric, Array
+
+
+def numeric(type: Type) -> Numeric:
+    if not isinstance(type, Numeric):
+        raise ValueError("expected a numeric type")
+    return type
 
 
 class BinaryExpression(Expression):
@@ -8,6 +15,8 @@ class BinaryExpression(Expression):
     right: Expression
 
     def __init__(self, left: Expression, right: Expression):
+        if not isinstance(left.type, Numeric) or not isinstance(right.type, Numeric):
+            raise ValueError("expected Numeric arguments")
         self.left = left
         self.right = right
 
@@ -15,25 +24,47 @@ class BinaryExpression(Expression):
 class TrueDiv(BinaryExpression):
     @property
     def type(self) -> Type:
-        if not isinstance(self.left.type, Divisible) or not isinstance(
-            self.right.type, Divisible
-        ):
-            raise ValueError("expected divisible arguments")
-        return self.left.type / self.right.type
+        return numeric(self.left.type) / numeric(self.right.type)
 
     def sensitivity(self) -> Any:
-        """
-        The sensitivity of a division operation is given as ls/(|rv|-rs), where
-        ls is the sensitivity of the dividend (left value), rs is the sensitivity
-        of the divisor (right value) and rv is the value of the divisor.
-        """
-        ls = self.left.sensitivity()
+
         rs = self.right.sensitivity()
-        rv = self.right.true()
-        rm = abs(rv) - rs
-        if rm <= 0:
+        ls = self.left.sensitivity()
+        lb = self.left.true()
+        rb = self.right.true()
+
+        lt = numeric(self.left.type)
+        rt = numeric(self.right.type)
+
+        # minimum possible left value given the current base value
+        lv_min = max(lb - ls, lt.min)
+        # maximum possible left value given the current base value
+        lv_max = min(lb + ls, lt.max)
+
+        # minimum possible right value given the current base value
+        rv_min = max(rb - rs, rt.min)
+        # maximum possible right value given the current base value
+        rv_max = min(rb + rs, rt.max)
+
+        if rv_max > 0 and rv_min < 0 or rt.max > 0 and rt.min < 0:
             raise ValueError("infinite sensitivity")
-        return ls / rm
+
+        # both values are arrays
+        if isinstance(lt, Array) and isinstance(rt, Array):
+            return lt.absmax / rt.absmin
+        # left value is array, right is scalar
+        if isinstance(lt, Array):
+            return lt.absmax / min(abs(rv_min), abs(rv_max))
+        # right value is array, left is scalar
+        if isinstance(rt, Array):
+            return max(abs(lv_min), abs(lv_max)) / rt.absmin
+        # both values are scalars
+        return max(
+            abs(lv_min / rv_min - lb / rb),
+            abs(lv_max / rv_min - lb / rb),
+            abs(lv_min / rv_max - lb / rb),
+            abs(lv_max / rv_max - lb / rb),
+        )
 
     def dp(self, epsilon: float) -> Any:
         return self.type.dp(self.true(), self.sensitivity(), epsilon)
@@ -45,24 +76,47 @@ class TrueDiv(BinaryExpression):
 class FloorDiv(BinaryExpression):
     @property
     def type(self) -> Type:
-        if not isinstance(self.left.type, Divisible) or not isinstance(
-            self.right.type, Divisible
-        ):
-            raise ValueError("expected divisible arguments")
-        return self.left.type // self.right.type
+        return numeric(self.left.type) // numeric(self.right.type)
 
     def sensitivity(self) -> Any:
-        """
-        The sensitivity of a floor division operation is given as for the
-        normal division, except that we take the floor value
-        """
-        ls = self.left.sensitivity()
+
         rs = self.right.sensitivity()
-        rv = self.right.true()
-        rm = abs(rv) - rs
-        if rm <= 0:
+        ls = self.left.sensitivity()
+        lb = self.left.true()
+        rb = self.right.true()
+
+        lt = numeric(self.left.type)
+        rt = numeric(self.right.type)
+
+        # minimum possible left value given the current base value
+        lv_min = max(lb - ls, lt.min)
+        # maximum possible left value given the current base value
+        lv_max = min(lb + ls, lt.max)
+
+        # minimum possible right value given the current base value
+        rv_min = max(rb - rs, rt.min)
+        # maximum possible right value given the current base value
+        rv_max = min(rb + rs, rt.max)
+
+        if rv_max > 0 and rv_min < 0 or rt.max > 0 and rt.min < 0:
             raise ValueError("infinite sensitivity")
-        return ls // rm
+
+        # both values are arrays
+        if isinstance(lt, Array) and isinstance(rt, Array):
+            return lt.absmax // rt.absmin
+        # left value is array, right is scalar
+        if isinstance(lt, Array):
+            return lt.absmax // min(abs(rv_min), abs(rv_max))
+        # right value is array, left is scalar
+        if isinstance(rt, Array):
+            return max(abs(lv_min), abs(lv_max)) // rt.absmin
+        # both values are scalars
+        return max(
+            abs(lv_min // rv_min - lb // rb),
+            abs(lv_max // rv_min - lb // rb),
+            abs(lv_min // rv_max - lb // rb),
+            abs(lv_max // rv_max - lb // rb),
+        )
 
     def dp(self, epsilon: float) -> Any:
         return self.type.dp(self.true(), self.sensitivity(), epsilon)
@@ -75,16 +129,12 @@ class Add(BinaryExpression):
 
     """
     Represents the sum of two expressions. Can only be calculated for
-    expressions that return addable values.
+    expressions that return Numeric values.
     """
 
     @property
     def type(self) -> Type:
-        if not isinstance(self.left.type, Addable) or not isinstance(
-            self.right.type, Addable
-        ):
-            raise ValueError("expected addable arguments")
-        return self.left.type + self.right.type
+        return numeric(self.left.type) + numeric(self.right.type)
 
     def sensitivity(self) -> Any:
         return max(self.left.sensitivity(), self.right.sensitivity())
@@ -103,26 +153,50 @@ class Mul(BinaryExpression):
 
     """
     Represents the product of two expressions. Can only be calculated for
-    expressions that return multipliable values.
+    expressions that return Numeric values.
     """
 
     @property
     def type(self) -> Type:
-        if not isinstance(self.left.type, Multipliable) or not isinstance(
-            self.right.type, Multipliable
-        ):
-            print(self.left.type, self.right.type)
-            raise ValueError("expected multipliable arguments")
-        return self.left.type * self.right.type
+        return numeric(self.left.type) * numeric(self.right.type)
 
     def sensitivity(self) -> Any:
-        """
-        The sensitivity of a multiplication is given as the maximum of
-        |lv|*(|rv|+rs) and |rv|*(|lv|+ls).
-        """
-        ls = self.left.sensitivity()
+
+        lt = numeric(self.left.type)
+        rt = numeric(self.right.type)
+
         rs = self.right.sensitivity()
-        return ls * rs
+        ls = self.left.sensitivity()
+
+        if not isinstance(lt, Array):
+            lb = self.left.true()
+            # minimum possible left value given the current base value
+            lv_min = min(lb + ls, lt.max)
+            # maximum possible left value given the current base value
+            lv_max = max(lb - ls, lt.min)
+        if not isinstance(self.right.type, Array):
+            rb = self.right.true()
+            # minimum possible right value given the current base value
+            rv_min = min(rb + rs, rt.max)
+            # maximum possible right value given the current base value
+            rv_max = max(rb - rs, rt.min)
+
+        # both values are arrays
+        if isinstance(lt, Array) and isinstance(rt, Array):
+            return ls * rs
+        # left value is array, right is scalar
+        if isinstance(lt, Array):
+            return ls * max(abs(rv_min), abs(rv_max))
+        # right value is array, left is scalar
+        if isinstance(rt, Array):
+            return rs * max(abs(lv_min), abs(lv_max))
+        # both values are scalar
+        return max(
+            abs(lv_min * rv_min - lb * rb),
+            abs(lv_max * rv_min - lb * rb),
+            abs(lv_min * rv_max - lb * rb),
+            abs(lv_max * rv_max - lb * rb),
+        )
 
     def is_dp(self) -> bool:
         return self.left.is_dp() and self.right.is_dp()
@@ -138,17 +212,12 @@ class Sub(BinaryExpression):
 
     """
     Represents the difference of two expressions. Can only be calculated for
-    expressions that return subtractable values.
+    expressions that return Numeric values.
     """
 
     @property
     def type(self) -> Type:
-        if not isinstance(self.left.type, Subtractable) or not isinstance(
-            self.right.type, Subtractable
-        ):
-            print(self.left, self.right.type)
-            raise ValueError("expected subtractable arguments")
-        return self.left.type - self.right.type
+        return numeric(self.left.type) - numeric(self.right.type)
 
     def sensitivity(self) -> Any:
         return max(self.left.sensitivity(), self.right.sensitivity())

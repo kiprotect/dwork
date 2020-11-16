@@ -1,7 +1,7 @@
 from .expression import Expression
 from ..dataset import Dataset
 from ..mechanisms import geometric_noise
-from .types import Type, Array, Integer, Float
+from .types import Type, Array, Integer, Float, Numeric
 from typing import Any, Optional
 
 
@@ -15,7 +15,7 @@ class Length(Function):
 
     @property
     def type(self) -> Type:
-        return Integer(min=0, max=None)
+        return Integer(min=1)
 
     def sensitivity(self, value: Optional[Any] = None) -> Any:
         return 1
@@ -32,17 +32,24 @@ class Sum(Function):
     def type(self) -> Type:
         if not isinstance(self.expression.type, Array):
             raise ValueError("not an array")
-        return self.expression.type.itemtype
+        it = self.expression.type.itemtype
+        if not isinstance(it, Numeric):
+            raise ValueError("expected a numeric type")
+        return it.sum()
 
     def dp(self, epsilon: float) -> Any:
         if not isinstance(self.expression.type, Array):
             raise ValueError("not an array")
         tv = self.expression.true()
-        st = self.expression.type.sum(len(tv))
+        st = self.expression.type.sum()
         return st.dp(tv.sum(), self.sensitivity(), epsilon)
 
     def true(self) -> Any:
         return self.expression.true().sum()
 
     def sensitivity(self, value: Optional[Any] = None) -> Any:
+        """
+        The sensitivity of a sum is given as the sensitivity of the expression
+        that constitutes the sum.
+        """
         return self.expression.sensitivity()

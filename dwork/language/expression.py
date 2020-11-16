@@ -84,11 +84,11 @@ class Constant(Expression):
         if isinstance(self.value, int):
             from .types import Integer
 
-            return Integer()
+            return Integer(min=self.value, max=self.value)
         elif isinstance(self.value, float):
             from .types import Float
 
-            return Float()
+            return Float(min=self.value, max=self.value)
         else:
             raise ValueError("unsupported constant type")
 

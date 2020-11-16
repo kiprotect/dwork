@@ -4,6 +4,7 @@ import os
 
 from dwork.dataset.pandas import PandasDataset
 from dwork.dataschema import DataSchema
+from dwork.language.expression import to_expression as te
 from dwork.language.types import Integer, Float
 
 datasets_path = os.path.join(
@@ -25,12 +26,15 @@ class ExpressionsTest(unittest.TestCase):
     def test_complex_expression(self):
         ds = load_ds()
         # we add two values together (which is nonsensical in this case)
-        x = (ds["Weight"]-ds["Height"]*2.0).sum()
+        x = (te(1.0)+ds["Weight"]-te(2.0)*ds["Height"]).sum()
         assert not x.is_dp()
 
-        tx = (ds.df["Weight"]-ds.df["Height"]*2.0).sum()
+        tx = (1.0+ds.df["Weight"]-2.0*ds.df["Height"]).sum()
         # we make sure the exact value is what we expect
-        assert tx == -196244.0
+        assert tx == -196244.0+740
+
+        # we make sure the sensitivity of the expression was correctly changed
+        assert x.sensitivity() == 400.0
 
         # we make sure the exact value is identical to the expression value
         assert tx == x.true()
@@ -62,13 +66,13 @@ class ExpressionsTest(unittest.TestCase):
         assert tx == x.true()
 
         # we make sure the 
-        assert 183000 <= x.dp(0.5) <= 187000
+        assert 183000 <= x.dp(0.5) <= 189000
 
         uniques = set()
         for i in range(10):
             xdp = x.dp(0.5)
             uniques.add(xdp)
-            assert 183000 <= xdp <= 188000
+            assert 183000 <= xdp <= 189000
 
         # we check that the DP mechanism does not always produce the same value
         # (this is not a proper DP test)
@@ -88,7 +92,7 @@ class ExpressionsTest(unittest.TestCase):
         assert tx == x.true()
 
         # we make sure the sensitivity is lower than that of the original value
-        assert x.sensitivity() == 0.2706359945872801
+        assert x.sensitivity() == 0.3775847566104602
 
         uniques = set()
         for i in range(10):
