@@ -20,6 +20,14 @@ class BinaryExpression(Expression):
         self.left = left
         self.right = right
 
+    def dp(self, epsilon: float) -> Any:
+        if self.is_dp():
+            return self.true()
+        return self.type.dp(self.true(), self.sensitivity(), epsilon)
+
+    def is_dp(self) -> bool:
+        return self.left.is_dp() and self.right.is_dp()
+
 
 class TrueDiv(BinaryExpression):
     @property
@@ -65,9 +73,6 @@ class TrueDiv(BinaryExpression):
             abs(lv_min / rv_max - lb / rb),
             abs(lv_max / rv_max - lb / rb),
         )
-
-    def dp(self, epsilon: float) -> Any:
-        return self.type.dp(self.true(), self.sensitivity(), epsilon)
 
     def true(self) -> Any:
         return self.left.true() / self.right.true()
@@ -118,9 +123,6 @@ class FloorDiv(BinaryExpression):
             abs(lv_max // rv_max - lb // rb),
         )
 
-    def dp(self, epsilon: float) -> Any:
-        return self.type.dp(self.true(), self.sensitivity(), epsilon)
-
     def true(self) -> Any:
         return self.left.true() // self.right.true()
 
@@ -138,12 +140,6 @@ class Add(BinaryExpression):
 
     def sensitivity(self) -> Any:
         return max(self.left.sensitivity(), self.right.sensitivity())
-
-    def is_dp(self) -> bool:
-        return self.left.is_dp() and self.right.is_dp()
-
-    def dp(self, epsilon: float) -> Any:
-        return self.type.dp(self.true(), self.sensitivity(), epsilon)
 
     def true(self) -> Any:
         return self.left.true() + self.right.true()
@@ -198,12 +194,6 @@ class Mul(BinaryExpression):
             abs(lv_max * rv_max - lb * rb),
         )
 
-    def is_dp(self) -> bool:
-        return self.left.is_dp() and self.right.is_dp()
-
-    def dp(self, epsilon: float) -> Any:
-        return self.type.dp(self.true(), self.sensitivity(), epsilon)
-
     def true(self) -> Any:
         return self.left.true() * self.right.true()
 
@@ -221,12 +211,6 @@ class Sub(BinaryExpression):
 
     def sensitivity(self) -> Any:
         return max(self.left.sensitivity(), self.right.sensitivity())
-
-    def is_dp(self) -> bool:
-        return self.left.is_dp() and self.right.is_dp()
-
-    def dp(self, epsilon: float) -> Any:
-        return self.type.dp(self.true(), self.sensitivity(), epsilon)
 
     def true(self) -> Any:
         return self.left.true() - self.right.true()
