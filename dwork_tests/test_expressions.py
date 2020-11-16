@@ -50,7 +50,7 @@ class ExpressionsTest(unittest.TestCase):
     
         # we check that the DP mechanism does not always produce the same value
         # (this is not a proper DP test)
-        assert len(uniques) >= 4
+        assert len(uniques) >= 3
 
     def test_simple_sum(self):
         ds = load_ds()
@@ -76,7 +76,7 @@ class ExpressionsTest(unittest.TestCase):
 
         # we check that the DP mechanism does not always produce the same value
         # (this is not a proper DP test)
-        assert len(uniques) >= 4
+        assert len(uniques) >= 3
 
     def test_mean(self):
         ds = load_ds()
@@ -91,8 +91,17 @@ class ExpressionsTest(unittest.TestCase):
         # we make sure the exact value is identical to the expression value
         assert tx == x.true()
 
+        n = len(ds.df)
+        s = ds.df["Weight"].sum()
+        # Dwork overestimates the sensitivity here because it cannot know that
+        # the length of the array will never decrease when the sum increases.
+        # It just knows that the dividend has a sensitivity of 200 and the
+        # divisor has a sensitivity of 1. The true sensitivity of this
+        # expression is given as 0.27
+        ts = (s+200)/(n-1)-s/n
+
         # we make sure the sensitivity is lower than that of the original value
-        assert x.sensitivity() == 0.3775847566104602
+        assert x.sensitivity() == ts
 
         uniques = set()
         for i in range(10):
@@ -102,4 +111,4 @@ class ExpressionsTest(unittest.TestCase):
 
         # we check that the DP mechanism does not always produce the same value
         # (this is not a proper DP test)
-        assert len(uniques) >= 5
+        assert len(uniques) >= 3
