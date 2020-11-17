@@ -22,6 +22,8 @@ class BinaryExpression(Expression):
 
     def dp(self, epsilon: float) -> Any:
         if self.is_dp():
+            # if DP was applied on the leven of the individual operands we
+            # simply return the true value.
             return self.true()
         return self.type.dp(self.true(), self.sensitivity(), epsilon)
 

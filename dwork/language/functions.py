@@ -41,6 +41,10 @@ class Sum(Function):
         if not isinstance(self.expression.type, Array):
             raise ValueError("not an array")
         tv = self.expression.true()
+        # if differential privacy was applied on the level of the expression
+        # already, we just return the true value
+        if self.expression.is_dp():
+            return tv
         st = self.expression.type.sum()
         return st.dp(tv.sum(), self.sensitivity(), epsilon)
 
