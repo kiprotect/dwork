@@ -1,0 +1,6 @@
+- version: 0.0.4
+  changelog:
+    en: |
+      - Added more functionality for calculating differentially private aggregate functions.
+  tags: [improvements]
+  date: 2020.11.11
