@@ -5,7 +5,7 @@ import math
 from typing import Any, Union, Iterable
 from .dataset import Dataset
 from .attribute import Attribute, AttributeCondition, TrueAttribute
-from ..language.types import Array, Type
+from ..language.types import Array, Type, Boolean
 from ..mechanisms import geometric_noise, laplace_noise
 from ..language.expression import Expression, ConditionalExpression
 from ..language.functions import Length, Sum
@@ -119,7 +119,7 @@ class PandasAttribute(Attribute):
         raise NotImplementedError
 
     def __gt__(self, other: Any) -> AttributeCondition:
-        raise NotImplementedError
+        return PandasAttributeCondition(self, operator.gt, other)
 
     def __lt__(self, other: Any) -> AttributeCondition:
         raise NotImplementedError
@@ -129,6 +129,31 @@ class PandasAttribute(Attribute):
 
     def __ne__(self, other: Any) -> AttributeCondition:  # type: ignore[override]
         raise NotImplementedError
+
+
+class PandasAttributeCondition(AttributeCondition):
+
+    attribute: PandasAttribute
+    operator: Any
+    operand: Any
+
+    def __init__(self, attribute: PandasAttribute, operator: Any, operand: Any):
+        self.attribute = attribute
+        self.operator = operator
+        self.operand = operand
+
+    def dp(self, epsilon: float) -> Any:
+        raise NotImplementedError
+
+    def sensitivity(self) -> Any:
+        raise NotImplementedError
+
+    def true(self) -> Any:
+        return self.operator(self.attribute.true().series, self.operand)
+
+    @property
+    def type(self) -> Type:
+        return Array(Boolean())
 
 
 class PandasDataset(Dataset):

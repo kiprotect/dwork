@@ -284,3 +284,9 @@ class Boolean(Type):
     """
     Represents boolean data
     """
+
+    def dp(self, value: Any, sensitivity: Any, epsilon: float) -> Any:
+        """
+        To do: implement randomized response-
+        """
+        raise NotImplementedError

@@ -10,7 +10,7 @@ DataSchemaType = TypeVar("DataSchemaType", bound=DataSchema)
 
 class Dataset:
     def __init__(self, schema: Type[DataSchemaType]):
-        self.schema = schema(self)
+        self.schema = schema
 
     @abc.abstractmethod
     def len(self) -> int:

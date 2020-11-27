@@ -1,4 +1,5 @@
 from ..language.types import Type
+from typing import Dict
 
 
 class DataSchemaMeta(type):
@@ -12,9 +13,4 @@ class DataSchemaMeta(type):
 
 
 class DataSchema(metaclass=DataSchemaMeta):
-    def __init__(self, attributes):
-        self._attributes = attributes
-
-    @property
-    def attributes(self):
-        return self._attributes
+    pass
