@@ -2,12 +2,12 @@ import pandas as pd
 import random
 import operator
 import math
-from typing import Any, Union
+from typing import Any, Union, Iterable
 from .dataset import Dataset
-from .attribute import Attribute, TrueAttribute
+from .attribute import Attribute, AttributeCondition, TrueAttribute
 from ..language.types import Array, Type
 from ..mechanisms import geometric_noise, laplace_noise
-from ..language.expression import Expression
+from ..language.expression import Expression, ConditionalExpression
 from ..language.functions import Length, Sum
 
 import math
@@ -112,10 +112,30 @@ class PandasAttribute(Attribute):
     def __len__(self):
         return self.len()
 
+    def __ge__(self, other: Any) -> AttributeCondition:
+        raise NotImplementedError
+
+    def __le__(self, other: Any) -> AttributeCondition:
+        raise NotImplementedError
+
+    def __gt__(self, other: Any) -> AttributeCondition:
+        raise NotImplementedError
+
+    def __lt__(self, other: Any) -> AttributeCondition:
+        raise NotImplementedError
+
+    def __eq__(self, other: Any) -> AttributeCondition:  # type: ignore[override]
+        raise NotImplementedError
+
+    def __ne__(self, other: Any) -> AttributeCondition:  # type: ignore[override]
+        raise NotImplementedError
+
 
 class PandasDataset(Dataset):
     def __init__(self, schema, df, *args, **kwargs):
         super().__init__(schema, *args, **kwargs)
+        self.args = args
+        self.kwargs = kwargs
         self.df = df
 
     def len(self):
@@ -124,10 +144,20 @@ class PandasDataset(Dataset):
     def __len__(self):
         return self.len()
 
+    def group_by(self, attributes: Iterable[Attribute]) -> "PandasDataset":
+        raise NotImplementedError
+
     def __getitem__(
-        self, column_or_expression: Union[str, Expression]
+        self, column_or_expression: Union[str, ConditionalExpression]
     ) -> Union["PandasDataset", PandasAttribute]:
+        """
+        :params column_or_expression: If a string, returns the attribute corresponding to the column named by the string. If an conditional expression, returns a dataset with all rows that match the condition.
+        """
         if isinstance(column_or_expression, str):
             return PandasAttribute(self, column_or_expression)
-        if isinstance(column_or_expression, Expression):
+        if not isinstance(column_or_expression, AttributeCondition):
             raise ValueError("not supported")
+        # we simply return a dataset with all rows that match the attribute condition
+        return PandasDataset(
+            self.schema, self.df[column_or_expression.true()], *self.args, **self.kwargs
+        )

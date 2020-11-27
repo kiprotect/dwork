@@ -2,7 +2,7 @@ import abc
 from typing import Type, TypeVar, Iterable, Union
 from .attribute import Attribute
 from ..language.types import Type as DworkType
-from ..language.expression import Expression
+from ..language.expression import ConditionalExpression
 from ..dataschema import DataSchema
 
 DataSchemaType = TypeVar("DataSchemaType", bound=DataSchema)
@@ -25,6 +25,6 @@ class Dataset:
 
     @abc.abstractmethod
     def __getitem__(
-        self, column_or_expression: Union[str, Expression]
+        self, column_or_expression: Union[str, ConditionalExpression]
     ) -> Union["Dataset", Attribute]:
         raise NotImplementedError

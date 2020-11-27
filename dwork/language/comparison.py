@@ -1,2 +1,5 @@
-class Comparison:
+from .expression import ConditionalExpression
+
+
+class Comparison(ConditionalExpression):
     pass

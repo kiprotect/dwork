@@ -100,3 +100,7 @@ class Constant(Expression):
 
     def dp(self, epsilon: float) -> Any:
         return self.true()
+
+
+class ConditionalExpression(Expression):
+    pass

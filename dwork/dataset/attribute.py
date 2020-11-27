@@ -1,4 +1,4 @@
-from ..language.expression import Expression
+from ..language.expression import Expression, ConditionalExpression
 from typing import Any
 import abc
 
@@ -79,5 +79,31 @@ class TrueAttribute:
         raise NotImplementedError
 
 
-class Attribute(Expression):
+class AttributeCondition(ConditionalExpression):
     pass
+
+
+class Attribute(Expression):
+    @abc.abstractmethod
+    def __ge__(self, other: Any) -> AttributeCondition:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __le__(self, other: Any) -> AttributeCondition:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __gt__(self, other: Any) -> AttributeCondition:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __lt__(self, other: Any) -> AttributeCondition:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __eq__(self, other: Any) -> AttributeCondition:  # type: ignore[override]
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __ne__(self, other: Any) -> AttributeCondition:  # type: ignore[override]
+        raise NotImplementedError
