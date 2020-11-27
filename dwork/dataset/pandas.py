@@ -2,7 +2,7 @@ import pandas as pd
 import random
 import operator
 import math
-from typing import Any
+from typing import Any, Union
 from .dataset import Dataset
 from .attribute import Attribute, TrueAttribute
 from ..language.types import Array, Type
@@ -124,5 +124,10 @@ class PandasDataset(Dataset):
     def __len__(self):
         return self.len()
 
-    def __getitem__(self, item: str) -> PandasAttribute:
-        return PandasAttribute(self, item)
+    def __getitem__(
+        self, column_or_expression: Union[str, Expression]
+    ) -> Union["PandasDataset", PandasAttribute]:
+        if isinstance(column_or_expression, str):
+            return PandasAttribute(self, column_or_expression)
+        if isinstance(column_or_expression, Expression):
+            raise ValueError("not supported")
