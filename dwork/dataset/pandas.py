@@ -3,7 +3,7 @@ import random
 import operator
 import math
 from typing import Any, Union, Iterable
-from .dataset import Dataset
+from .dataset import Dataset, GroupedDataset
 from .attribute import Attribute, AttributeCondition, TrueAttribute
 from ..language.types import Array, Type, Boolean
 from ..mechanisms import geometric_noise, laplace_noise
@@ -156,6 +156,64 @@ class PandasAttributeCondition(AttributeCondition):
         return Array(Boolean())
 
 
+class GroupedPandasDataset(GroupedDataset):
+
+    """
+    Groups a dataset by one or several expressions. An expression can be a
+    column name or a function. If a column name is given, a group will be
+    generated for every value of that column.
+
+    .. warning:: Be aware that grouping by attribute value might leak sensitive
+       information about individuals in the dataset, as even the presence or
+       absence of a particular group can provide information about an individual
+       to an adversary. To mitigate this risk, the constructor of this class
+       contains a `treshold` parameter whose function is explained below. Be
+       careful when modifying this or unsetting this parameter, as it might
+       lead to leakage of sensitive information.
+
+    :param treshold: The minimum number of rows/datapoints that a formed group
+      must have in order to qualify for inclusion. The treshold is evaluated
+      against the differentially private row count of every group.
+    :param epsilon: The $\epsilon$ value for the calculation of the row count
+      of a group that is evaluated against the given treshold.
+    
+    .. warning:: Beware of setting a treshold to a very low value (e.g. 1 or 2)
+      as this might leak sensitive information about the presence or absence of
+      a given datapoint to an adversary. The reason for this is that currently
+      we rely on the values of a given attribute that are present in the dataset
+      to form groups, which can be problematic in combination with a low treshold.
+      For example, if we choose a treshold of 1, adding a single datapoint with
+      a given attribute value that was not present before to the dataset might
+      produce a group with that value with a high probability, whereas when
+      excluding this datapoint the probability of the group being generated
+      is zero, causing the grouping to violate the differential privacy criterion.
+
+    Future improvements:
+
+    - Check that the chosen treshold in combination with the chosen epsilon
+      actually produces differentially private groups and does not suffer from
+      the negative inclusion problem mentioned above.
+
+    """
+
+    def __init__(self, dataset, treshold=10, epsilon=0.3, **kwargs):
+        self.kwargs = kwargs
+        self.dataset = dataset
+        self._groups = []
+        self._datasets = []
+        for key, group in dataset.df.groupby(**kwargs):
+            self._groups.append(key)
+            self._datasets.append(PandasDataset(dataset.schema, group))
+
+    @property
+    def groups(self) -> Iterable[Any]:
+        return self._groups
+
+    @property
+    def datasets(self) -> Iterable[Dataset]:
+        return self._datasets
+
+
 class PandasDataset(Dataset):
     def __init__(self, schema, df, *args, **kwargs):
         super().__init__(schema, *args, **kwargs)
@@ -169,20 +227,23 @@ class PandasDataset(Dataset):
     def __len__(self):
         return self.len()
 
-    def group_by(self, attributes: Iterable[Attribute]) -> "PandasDataset":
-        raise NotImplementedError
+    def group_by(self, **kwargs) -> GroupedDataset:
+        return GroupedPandasDataset(self, **kwargs)
 
     def __getitem__(
         self, column_or_expression: Union[str, ConditionalExpression]
     ) -> Union["PandasDataset", PandasAttribute]:
         """
-        :params column_or_expression: If a string, returns the attribute corresponding to the column named by the string. If an conditional expression, returns a dataset with all rows that match the condition.
+        :params column_or_expression: If a string, returns the attribute
+          corresponding to the column named by the string. If an conditional
+          expression, returns a dataset with all rows that match the condition.
         """
         if isinstance(column_or_expression, str):
+            # this is a column name, we return a pandas attribute
             return PandasAttribute(self, column_or_expression)
         if not isinstance(column_or_expression, AttributeCondition):
             raise ValueError("not supported")
-        # we simply return a dataset with all rows that match the attribute condition
+        # this is a filter expression, we return a dataset with all matching rows
         return PandasDataset(
             self.schema, self.df[column_or_expression.true()], *self.args, **self.kwargs
         )
