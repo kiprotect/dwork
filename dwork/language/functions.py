@@ -15,7 +15,7 @@ class Length(Function):
 
     @property
     def type(self) -> Type:
-        return Integer(min=1)
+        return Integer(min=0)
 
     def sensitivity(self, value: Optional[Any] = None) -> Any:
         return 1
