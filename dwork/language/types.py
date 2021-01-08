@@ -7,9 +7,6 @@ maxint = int(2e31 - 1)
 
 
 class Type:
-    def __init__(self):
-        pass
-
     @abc.abstractmethod
     def dp(self, value: Any, sensitivity: Any, epsilon: float) -> Any:
         raise NotImplementedError
