@@ -132,7 +132,6 @@ class PandasAttribute(Attribute):
 
 
 class PandasAttributeCondition(AttributeCondition):
-
     attribute: PandasAttribute
     operator: Any
     operand: Any
@@ -176,7 +175,7 @@ class GroupedPandasDataset(GroupedDataset):
       against the differentially private row count of every group.
     :param epsilon: The $\epsilon$ value for the calculation of the row count
       of a group that is evaluated against the given treshold.
-    
+
     .. warning:: Beware of setting a treshold to a very low value (e.g. 1 or 2)
       as this might leak sensitive information about the presence or absence of
       a given datapoint to an adversary. The reason for this is that currently

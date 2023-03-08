@@ -37,7 +37,6 @@ class TrueDiv(BinaryExpression):
         return numeric(self.left.type) / numeric(self.right.type)
 
     def sensitivity(self) -> Any:
-
         rs = self.right.sensitivity()
         ls = self.left.sensitivity()
         lb = self.left.true()
@@ -86,7 +85,6 @@ class FloorDiv(BinaryExpression):
         return numeric(self.left.type) // numeric(self.right.type)
 
     def sensitivity(self) -> Any:
-
         rs = self.right.sensitivity()
         ls = self.left.sensitivity()
         lb = self.left.true()
@@ -159,7 +157,6 @@ class Mul(BinaryExpression):
         return numeric(self.left.type) * numeric(self.right.type)
 
     def sensitivity(self) -> Any:
-
         lt = numeric(self.left.type)
         rt = numeric(self.right.type)
 

@@ -16,5 +16,4 @@ class DataSchemaMeta(type):
 
 
 class DataSchema(metaclass=DataSchemaMeta):
-
     names: Optional[Dict[str, str]] = None
