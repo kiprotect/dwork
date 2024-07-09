@@ -5,13 +5,13 @@ from req import reqs
 setup(
     name="dwork",
     python_requires=">=3.6",
-    version="0.0.7",
+    version="0.0.13",
     author="KIProtect GmbH",
     author_email="dwork@kiprotect.com",
     license="BSD-3",
     url="https://github.com/kiprotect/dwork",
     packages=find_packages(),
-    package_data={"": ["*.ini"], "dwork" : ['py.typed']},
+    include_package_data=True,
     install_requires=reqs,
     zip_safe=False,
     # no console script so far

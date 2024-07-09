@@ -1,0 +1,3 @@
+include req.py
+include requirements.txt
+include dwork/py.typed
